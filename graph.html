@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>COVID-19 2021 - Auto Graphs</title>
+
+<!-- SheetJS for reading Excel -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<!-- Chart.js for charts -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+  :root{
+    --glass: rgba(255,255,255,0.08);
+    --glass-strong: rgba(255,255,255,0.12);
+    --accent: #1db954;
+    --muted: #dfeef0;
+    --card-radius: 12px;
+  }
+  html,body{height:100%;margin:0;font-family:Inter,Segoe UI,Arial,sans-serif;background:
+    linear-gradient(180deg,#0f1723 0%, #0b1220 40%), url('https://images.unsplash.com/photo-1545239351-1141bd82e8a6?q=80&w=1600&auto=format&fit=crop&ixlib=rb-4.0.3&s=45b6f0b89cc0d9b85fb43a98b06b3b81') center/cover no-repeat;
+    color:#eef6f3;
+  }
+
+  header{
+    position:sticky; top:0; z-index:30;
+    background: linear-gradient(90deg, rgba(0,0,0,0.35), rgba(0,0,0,0.45));
+    padding:14px 18px;
+    display:flex; align-items:center; gap:12px;
+    box-shadow: 0 6px 18px rgba(2,6,23,0.6);
+  }
+  .brand{
+    display:flex; align-items:center; gap:12px;
+  }
+  .logo {
+    width:44px;height:44px;border-radius:8px;background:linear-gradient(135deg,var(--accent),#0abf7a);
+    display:flex;align-items:center;justify-content:center;font-weight:700;color:#02110a;
+    box-shadow:0 6px 18px rgba(27,185,80,0.12);
+  }
+  h1{font-size:18px;margin:0;letter-spacing:0.2px}
+  .top-actions { margin-left:auto; display:flex; gap:10px; align-items:center; }
+
+  main { padding:18px; display:grid; grid-template-columns: 300px 1fr; gap:18px; min-height:calc(100vh - 120px); }
+
+  /* Sidebar */
+  .sidebar {
+    background: var(--glass);
+    padding:14px;
+    border-radius: var(--card-radius);
+    backdrop-filter: blur(6px);
+    box-shadow: inset 0 1px rgba(255,255,255,0.02), 0 8px 30px rgba(2,6,23,0.6);
+  }
+  .sidebar h3{margin:0 0 8px 0;font-size:14px;color:var(--muted)}
+  .sidebar .control{margin-bottom:12px}
+  label { font-size:13px;color:#cfece0; display:block; margin-bottom:6px; }
+  input[type="file"] { color:transparent; }
+  .btn { background:var(--accent); color:#04110a; padding:8px 12px; border-radius:8px; border:none; cursor:pointer; font-weight:600; }
+  .btn.ghost { background: transparent; color:var(--muted); border:1px solid rgba(255,255,255,0.06); }
+
+  select, input[type="date"] {
+    width:100%; padding:8px; border-radius:8px; border:1px solid rgba(255,255,255,0.06);
+    background: rgba(10,10,10,0.35); color:var(--muted); font-size:13px;
+  }
+
+  /* Content */
+  .content {
+    display:flex; flex-direction:column; gap:18px;
+  }
+  .card {
+    background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));
+    border-radius: var(--card-radius);
+    padding:14px;
+    box-shadow: 0 10px 30px rgba(2,6,23,0.6);
+    border: 1px solid rgba(255,255,255,0.03);
+  }
+
+  .charts-grid {
+    display:grid; grid-template-columns: repeat(2, 1fr); gap:14px;
+  }
+  canvas { background: transparent; border-radius:8px; }
+
+  .full { grid-column: 1 / -1; }
+
+  footer{
+    background: linear-gradient(90deg, rgba(0,0,0,0.6), rgba(0,0,0,0.75));
+    color:#cbdad5; font-size:14px; text-align:center; padding:12px 16px; position:sticky; bottom:0;
+  }
+
+  /* Responsive */
+  @media (max-width: 980px){
+    main { grid-template-columns: 1fr; }
+    .charts-grid { grid-template-columns: 1fr; }
+    .top-actions { display:none; }
+  }
+
+  .muted { color:#bcd7cf; font-size:13px; margin-top:6px; }
+  .small { font-size:12px; color:#9fbfb2; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="logo">SSR</div>
+    <div>
+      <h1>COVID-19 2021 — Automatic Graphs</h1>
+      <div class="small">Upload Excel → Visualize multiple clear charts</div>
+    </div>
+  </div>
+
+  <div class="top-actions">
+    <button class="btn" id="demoBtn">Load Demo Data</button>
+    <label class="btn ghost" for="fileInput">Choose Excel file</label>
+    <input id="fileInput" type="file" accept=".xlsx,.xls" style="display:none">
+  </div>
+</header>
+
+<main>
+  <!-- Sidebar controls -->
+  <aside class="sidebar">
+    <h3>Controls</h3>
+
+    <div class="control">
+      <label>Select country</label>
+      <select id="countrySelect"><option>Loading...</option></select>
+    </div>
+
+    <div class="control">
+      <label>Date range (optional)</label>
+      <input type="date" id="startDate" /><div style="height:8px"></div>
+      <input type="date" id="endDate" />
+    </div>
+
+    <div class="control">
+      <label>Smoothing</label>
+      <select id="smoothing">
+        <option value="1">No smoothing</option>
+        <option value="3">3-day rolling</option>
+        <option value="7" selected>7-day rolling</option>
+      </select>
+    </div>
+
+    <div style="display:flex;gap:8px;margin-top:10px">
+      <button class="btn" id="applyBtn">Apply</button>
+      <button class="btn ghost" id="resetBtn">Reset</button>
+    </div>
+
+    <div style="margin-top:14px">
+      <div class="muted">Tips:</div>
+      <ul class="small">
+        <li>First column must be a Date (any parseable format).</li>
+        <li>Country column should contain country names.</li>
+        <li>Numeric columns: New Cases, New Deaths, Recovered Cases, Active Cases, Vaccinations.</li>
+      </ul>
+    </div>
+  </aside>
+
+  <!-- Main content, charts -->
+  <section class="content">
+    <div class="card">
+      <strong>Dataset summary:</strong> <span id="summaryText" class="small">No dataset loaded</span>
+    </div>
+
+    <div class="card charts-grid">
+      <div>
+        <canvas id="casesLine"></canvas>
+      </div>
+
+      <div>
+        <canvas id="deathsLine"></canvas>
+      </div>
+
+      <div class="full">
+        <canvas id="stackedArea"></canvas>
+      </div>
+
+      <div>
+        <canvas id="casesByCountry"></canvas>
+      </div>
+
+      <div>
+        <canvas id="vaccinationsByCountry"></canvas>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  This project is designed by B.Com students from SSR Degree College under the esteemed guidance of K. Jagan Sir.
+</footer>
+
+<script>
+/* --------------------
+   Utilities & globals
+   -------------------- */
+let rawRows = [];      // array of objects parsed from Excel
+let charts = [];       // Chart.js instances to destroy on reload
+const countrySelect = document.getElementById('countrySelect');
+const summaryText = document.getElementById('summaryText');
+const smoothingSelect = document.getElementById('smoothing');
+
+function clearCharts(){
+  charts.forEach(c => c.destroy());
+  charts = [];
+}
+
+function formatDateISO(d){
+  if(!d) return '';
+  const Y = d.getFullYear();
+  const M = String(d.getMonth()+1).padStart(2,'0');
+  const D = String(d.getDate()).padStart(2,'0');
+  return `${Y}-${M}-${D}`;
+}
+
+function parseDateFlexible(v){
+  if(v === null || v === undefined) return null;
+  if (v instanceof Date) return v;
+  if (typeof v === 'number') {
+    // Excel serial date -> JS date
+    // Excel's 1 Jan 1900 = 1, JS epoch: use offset 25569
+    const utc_days = Math.floor(v - 25569);
+    const utc_value = utc_days * 86400;
+    return new Date(utc_value * 1000);
+  }
+  // try native parse
+  let d = new Date(v);
+  if(!isNaN(d)) return d;
+  // fallback: replace '-' with '/' (common)
+  d = new Date(String(v).replace(/-/g,'/'));
+  if(!isNaN(d)) return d;
+  return null;
+}
+
+/* find column key case-insensitively */
+function findKey(row, list){
+  const keys = Object.keys(row);
+  for (const cand of list){
+    for (const k of keys){
+      if (k.toLowerCase().trim() === cand.toLowerCase().trim()) return k;
+    }
+  }
+  return null;
+}
+
+/* --------------------
+   Parsing Excel file
+   -------------------- */
+document.getElementById('fileInput').addEventListener('change', async (evt) => {
+  const f = evt.target.files[0];
+  if(!f) return;
+  const buf = await f.arrayBuffer();
+  const wb = XLSX.read(buf, {type:'array', cellDates:true});
+  const sheetName = wb.SheetNames[0];
+  const sheet = wb.Sheets[sheetName];
+  const data = XLSX.utils.sheet_to_json(sheet, {defval:null}); // array of objects
+  loadDataset(data);
+});
+
+document.getElementById('demoBtn').addEventListener('click', ()=> {
+  // generate small demo dataset (compatible shape)
+  const demo = [];
+  const countries = ['India','USA','Brazil','UK','Russia'];
+  const start = new Date('2021-01-01');
+  for(let i=0;i<120;i++){
+    const d = new Date(start); d.setDate(start.getDate()+i);
+    for(const c of countries){
+      demo.push({
+        'Date': formatDateISO(d),
+        'Country': c,
+        'New Cases': Math.round(500 + Math.random()*30000),
+        'New Deaths': Math.round(5 + Math.random()*800),
+        'Recovered Cases': Math.round(200 + Math.random()*25000),
+        'Active Cases': Math.round(50 + Math.random()*10000),
+        'Vaccinations': Math.round(1000 + Math.random()*90000)
+      });
+    }
+  }
+  loadDataset(demo);
+});
+
+/* --------------------
+   Main dataset loader
+   -------------------- */
+function loadDataset(rows){
+  if(!rows || rows.length===0){
+    alert('No data found in uploaded file.');
+    return;
+  }
+  // normalize: find column names
+  const sample = rows[0];
+  const dateKey = findKey(sample, ['Date','date','date_time','day']);
+  const countryKey = findKey(sample, ['Country','country','country_name']);
+  const cNewCases = findKey(sample, ['New Cases','NewCases','new_cases','cases']);
+  const cDeaths = findKey(sample, ['New Deaths','NewDeaths','new_deaths','deaths']);
+  const cRecovered = findKey(sample, ['Recovered Cases','Recovered','recovered_cases','recovered']);
+  const cActive = findKey(sample, ['Active Cases','Active','active_cases','active']);
+  const cVacc = findKey(sample, ['Vaccinations','Vaccination','vaccinations','vaccine_doses']);
+
+  if(!dateKey || !countryKey || !cNewCases){
+    alert('Required columns not found. Make sure your file has at least: Date, Country, New Cases.');
+    return;
+  }
+
+  // map to normalized rows
+  rawRows = rows.map(r => {
+    return {
+      DateRaw: r[dateKey],
+      Date: parseDateFlexible(r[dateKey]),
+      Country: r[countryKey] ?? 'Unknown',
+      NewCases: Number(r[cNewCases]) || 0,
+      NewDeaths: Number(r[cDeaths]) || 0,
+      Recovered: Number(r[cRecovered]) || 0,
+      Active: Number(r[cActive]) || 0,
+      Vaccinations: Number(r[cVacc]) || 0
+    };
+  }).filter(r => r.Date !== null);
+
+  if(rawRows.length === 0){
+    alert('No valid date rows found after parsing.');
+    return;
+  }
+
+  // populate country select
+  const countries = Array.from(new Set(rawRows.map(r=>r.Country))).sort();
+  countrySelect.innerHTML = '<option value="__all">All Countries</option>' + countries.map(c=>`<option value="${c}">${c}</option>`).join('');
+  // set date inputs range
+  const dates = rawRows.map(r=>r.Date).sort((a,b)=>a-b);
+  document.getElementById('startDate').value = formatDateISO(dates[0]);
+  document.getElementById('endDate').value = formatDateISO(dates[dates.length-1]);
+
+  summaryText.textContent = `Rows: ${rawRows.length} — Countries: ${countries.length} — Date range: ${formatDateISO(dates[0])} → ${formatDateISO(dates[dates.length-1])}`;
+
+  // draw initial charts
+  drawAllCharts();
+}
+
+/* --------------------
+   Data transform helpers
+   -------------------- */
+function filterAndAggregate(country, start, end){
+  // filter rows by country (or all) and date-range
+  let rows = rawRows.filter(r => {
+    if(country && country !== '__all' && r.Country !== country) return false;
+    if(start && r.Date < start) return false;
+    if(end && r.Date > end) return false;
+    return true;
+  });
+  // group by date
+  const byDate = {};
+  for(const r of rows){
+    const key = formatDateISO(r.Date);
+    if(!byDate[key]) byDate[key] = {Date: r.Date, NewCases:0, NewDeaths:0, Recovered:0, Active:0, Vaccinations:0};
+    byDate[key].NewCases += Number(r.NewCases || 0);
+    byDate[key].NewDeaths += Number(r.NewDeaths || 0);
+    byDate[key].Recovered += Number(r.Recovered || 0);
+    byDate[key].Active += Number(r.Active || 0);
+    byDate[key].Vaccinations += Number(r.Vaccinations || 0);
+  }
+  // sort by date ascending
+  const dates = Object.keys(byDate).sort();
+  const labels = [], newCases = [], newDeaths = [], recovered = [], active = [], vaccinations = [];
+  for(const d of dates){
+    labels.push(d);
+    newCases.push(byDate[d].NewCases);
+    newDeaths.push(byDate[d].NewDeaths);
+    recovered.push(byDate[d].Recovered);
+    active.push(byDate[d].Active);
+    vaccinations.push(byDate[d].Vaccinations);
+  }
+  return {labels, newCases, newDeaths, recovered, active, vaccinations};
+}
+
+function sumByCountry(metric){
+  // metric: 'NewCases' or 'Vaccinations' or 'NewDeaths'
+  const totals = {};
+  for(const r of rawRows){
+    totals[r.Country] = (totals[r.Country] || 0) + Number(r[metric] || 0);
+  }
+  const arr = Object.entries(totals).map(([k,v]) => ({country:k, value:v}));
+  arr.sort((a,b)=>b.value-a.value);
+  return arr;
+}
+
+/* rolling average */
+function rollingAverage(data, window){
+  if(window <= 1) return data.slice();
+  const res = [];
+  for(let i=0;i<data.length;i++){
+    let start = Math.max(0, i-window+1);
+    let sum=0, count=0;
+    for(let j=start;j<=i;j++){ sum += data[j]; count++; }
+    res.push(sum/count);
+  }
+  return res;
+}
+
+/* --------------------
+   Chart creation
+   -------------------- */
+function drawAllCharts(){
+  if(rawRows.length === 0) return;
+  clearCharts();
+
+  const country = countrySelect.value || '__all';
+  const startVal = document.getElementById('startDate').value;
+  const endVal = document.getElementById('endDate').value;
+  const start = startVal ? new Date(startVal) : null;
+  const end = endVal ? new Date(endVal) : null;
+  const smoothWindow = parseInt(smoothingSelect.value || '7', 10);
+
+  // prepare series for selected country
+  const ds = filterAndAggregate(country, start, end);
+  const labels = ds.labels;
+
+  // Chart 1: New Cases line with 7-day avg overlay
+  {
+    const ctx = document.getElementById('casesLine').getContext('2d');
+    const avg = rollingAverage(ds.newCases, smoothWindow);
+    const cfg = {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [
+          { label: 'New Cases', data: ds.newCases, borderColor: '#ff7b7b', backgroundColor: 'rgba(255,123,123,0.08)', fill:true, tension:0.2 },
+          { label: `${smoothWindow}-day avg`, data: avg, borderColor: '#ffd166', backgroundColor:'rgba(255,209,102,0.05)', fill:false, borderDash:[6,4], tension:0.25 }
+        ]
+      },
+      options: {
+        responsive:true,
+        plugins:{ title: { display:true, text: `New Cases (${country==='__all'?'All Countries':country})` }, legend:{ position:'top' } },
+        scales:{ x: { ticks:{color:'#cfece0'}}, y:{ ticks:{color:'#cfece0'} } }
+      }
+    };
+    charts.push(new Chart(ctx, cfg));
+  }
+
+  // Chart 2: New Deaths line
+  {
+    const ctx = document.getElementById('deathsLine').getContext('2d');
+    const cfg = {
+      type:'line',
+      data:{ labels, datasets:[ { label:'New Deaths', data: ds.newDeaths, borderColor:'#8aa7ff', backgroundColor:'rgba(138,167,255,0.06)', fill:true, tension:0.2 } ] },
+      options:{ responsive:true, plugins:{ title:{display:true, text:`New Deaths (${country==='__all'?'All Countries':country})`}}, scales:{ x:{ticks:{color:'#cfece0'}}, y:{ticks:{color:'#cfece0'}} } }
+    };
+    charts.push(new Chart(ctx, cfg));
+  }
+
+  // Chart 3: Stacked area (New Cases, Recovered, Active)
+  {
+    const ctx = document.getElementById('stackedArea').getContext('2d');
+    const cfg = {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [
+          { label:'Recovered', data: ds.recovered, borderColor:'#7efcff', backgroundColor:'rgba(126,252,255,0.12)', fill:true, stack:'stack1', tension:0.15 },
+          { label:'Active', data: ds.active, borderColor:'#ffd6a5', backgroundColor:'rgba(255,214,165,0.12)', fill:true, stack:'stack1', tension:0.15 },
+          { label:'New Cases', data: ds.newCases, borderColor:'#ffb4c6', backgroundColor:'rgba(255,180,198,0.14)', fill:true, stack:'stack1', tension:0.15 }
+        ]
+      },
+      options: {
+        responsive:true,
+        plugins:{ title:{display:true,text:`Cases / Recovered / Active (${country==='__all'?'All Countries':country})`} },
+        scales: {
+          x:{ ticks:{color:'#cfece0'} }, 
+          y:{ stacked: true, ticks:{color:'#cfece0'} }
+        }
+      }
+    };
+    charts.push(new Chart(ctx, cfg));
+  }
+
+  // Chart 4: Total New Cases per Country (bar)
+  {
+    const ctx = document.getElementById('casesByCountry').getContext('2d');
+    const arr = sumByCountry('NewCases');
+    const labelsC = arr.map(a=>a.country);
+    const valuesC = arr.map(a=>a.value);
+    const cfg = {
+      type:'bar',
+      data:{ labels:labelsC, datasets:[{ label:'Total New Cases (2021)', data:valuesC, backgroundColor:labelsC.map((_,i)=>`rgba(${40+i*20%200}, ${120+i*30%200}, ${180-i*10%200}, 0.85)`) }] },
+      options:{ responsive:true, plugins:{ title:{display:true,text:'Total New Cases by Country (2021)'} }, scales:{ y:{ ticks:{color:'#cfece0'}}, x:{ ticks:{color:'#cfece0'} } } }
+    };
+    charts.push(new Chart(ctx, cfg));
+  }
+
+  // Chart 5: Total Vaccinations per Country (bar)
+  {
+    const ctx = document.getElementById('vaccinationsByCountry').getContext('2d');
+    const arr = sumByCountry('Vaccinations');
+    const labelsV = arr.map(a=>a.country);
+    const valuesV = arr.map(a=>a.value);
+    const cfg = {
+      type:'bar',
+      data:{ labels:labelsV, datasets:[{ label:'Vaccinations (total in 2021)', data:valuesV, backgroundColor:labelsV.map(()=> 'rgba(142,255,168,0.85)') }] },
+      options:{ responsive:true, plugins:{ title:{display:true,text:'Total Vaccinations by Country (2021)'} }, scales:{ y:{ ticks:{color:'#cfece0'}}, x:{ ticks:{color:'#cfece0'} } } }
+    };
+    charts.push(new Chart(ctx, cfg));
+  }
+
+}
+
+/* --------------------
+   UI events
+   -------------------- */
+document.getElementById('applyBtn').addEventListener('click', ()=> {
+  if(rawRows.length === 0){ alert('Upload data first (or load demo).'); return;}
+  drawAllCharts();
+});
+document.getElementById('resetBtn').addEventListener('click', ()=> {
+  countrySelect.selectedIndex = 0;
+  if(rawRows.length){
+    const dsDates = rawRows.map(r=>r.Date).sort((a,b)=>a-b);
+    document.getElementById('startDate').value = formatDateISO(dsDates[0]);
+    document.getElementById('endDate').value = formatDateISO(dsDates[dsDates.length-1]);
+    smoothingSelect.value = '7';
+    drawAllCharts();
+  }
+});
+
+/* allow enter key on select to trigger */
+countrySelect.addEventListener('change', ()=> drawAllCharts());
+smoothingSelect.addEventListener('change', ()=> drawAllCharts());
+document.getElementById('startDate').addEventListener('change', ()=> drawAllCharts());
+document.getElementById('endDate').addEventListener('change', ()=> drawAllCharts());
+
+</script>
+</body>
+</html>
