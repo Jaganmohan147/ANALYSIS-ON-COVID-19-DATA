@@ -4,12 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ANALYSIS ON COVID-19 DATA</title>
-
-<!-- Chart.js & Plugins -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-
 <style>
     body {
         margin: 0;
@@ -26,6 +20,15 @@
         text-align: center;
         font-size: 1.5em;
         font-weight: bold;
+        position: relative;
+    }
+    .burger {
+        display: none;
+        position: absolute;
+        right: 10px;
+        top: 15px;
+        cursor: pointer;
+        font-size: 24px;
     }
     .container {
         flex: 1;
@@ -36,6 +39,12 @@
         background: rgba(0,0,0,0.85);
         padding-top: 20px;
         transition: transform 0.3s ease;
+        position: fixed;
+        top: 0;
+        right: 0;
+        height: 100%;
+        transform: translateX(0);
+        z-index: 100;
     }
     nav a {
         display: block;
@@ -52,6 +61,7 @@
         padding: 20px;
         background: rgba(0,0,0,0.6);
         overflow-y: auto;
+        margin-right: 250px; /* space for right nav */
     }
     section {
         display: none;
@@ -71,26 +81,11 @@
         text-align: center;
         padding: 10px;
         font-size: 0.9em;
-        position: sticky;
-        bottom: 0;
         color: #ccc;
-    }
-    .burger {
-        display: none;
-        position: absolute;
-        left: 10px;
-        top: 15px;
-        cursor: pointer;
-        font-size: 24px;
     }
     @media(max-width: 768px) {
         nav {
-            position: fixed;
-            top: 0;
-            left: 0;
-            height: 100%;
-            transform: translateX(-100%);
-            z-index: 100;
+            transform: translateX(100%);
         }
         nav.active {
             transform: translateX(0);
@@ -98,8 +93,8 @@
         .burger {
             display: block;
         }
-        .container {
-            flex-direction: column;
+        main {
+            margin-right: 0;
         }
     }
     @keyframes fadeIn {
@@ -111,28 +106,73 @@
         border-radius: 10px;
         padding: 10px;
     }
-    button {
-        margin: 5px;
-        padding: 8px 14px;
-        background: #4CAF50;
-        color: white;
-        border: none;
-        cursor: pointer;
-        border-radius: 5px;
-    }
-    button:hover {
-        background: #45a049;
-    }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.0"></script>
 </head>
 <body>
 
 <header>
-    <span class="burger" onclick="toggleMenu()">☰</span>
     ANALYSIS ON COVID-19 DATA
+    <span class="burger" onclick="toggleMenu()">☰</span>
 </header>
 
 <div class="container">
+    <main>
+        <section id="abstract" class="active">
+            <div class="card">
+                <h2>Abstract</h2>
+                <p>The COVID-19 pandemic... [your abstract text here]</p>
+            </div>
+        </section>
+        <section id="introduction">
+            <div class="card">
+                <h2>Introduction</h2>
+                <p>[your introduction text here]</p>
+            </div>
+        </section>
+        <section id="proposed">
+            <div class="card">
+                <h2>Proposed System</h2>
+                <p>[your proposed system text here]</p>
+            </div>
+        </section>
+        <section id="existing">
+            <div class="card">
+                <h2>Existing System</h2>
+                <p>[your existing system text here]</p>
+            </div>
+        </section>
+        <section id="technology">
+            <div class="card">
+                <h2>Technology</h2>
+                <p>[your technology text here]</p>
+            </div>
+        </section>
+        <section id="analysis">
+            <div class="card">
+                <h2>Analysis</h2>
+                <input type="file" id="fileInput" accept=".csv">
+                <button onclick="loadDemoData()">Demo Data</button>
+                <button onclick="resetZoomAll()">Reset Zoom</button>
+                <div>
+                    <canvas id="chart1"></canvas>
+                    <canvas id="chart2"></canvas>
+                    <canvas id="chart3"></canvas>
+                </div>
+            </div>
+        </section>
+        <section id="team">
+            <div class="card">
+                <h2>Team Members</h2>
+                <ul>
+                    <li>Member 1</li>
+                    <li>Member 2</li>
+                </ul>
+            </div>
+        </section>
+    </main>
+
     <nav id="sidebar">
         <a href="#" onclick="showSection('abstract')">Abstract</a>
         <a href="#" onclick="showSection('introduction')">Introduction</a>
@@ -142,190 +182,85 @@
         <a href="#" onclick="showSection('analysis')">Analysis</a>
         <a href="#" onclick="showSection('team')">Team Members</a>
     </nav>
-
-    <main>
-        <section id="abstract" class="active">
-            <div class="card">
-                <h2>Abstract</h2>
-                <p>The COVID-19 pandemic... [your abstract text here]</p>
-            </div>
-        </section>
-
-        <section id="introduction">
-            <div class="card">
-                <h2>Introduction</h2>
-                <p>COVID-19 continues to challenge global health systems... [your intro text]</p>
-            </div>
-        </section>
-
-        <section id="proposed">
-            <div class="card">
-                <h2>Proposed System</h2>
-                <p>Details of proposed system...</p>
-            </div>
-        </section>
-
-        <section id="existing">
-            <div class="card">
-                <h2>Existing System</h2>
-                <p>Existing system details...</p>
-            </div>
-        </section>
-
-        <section id="technology">
-            <div class="card">
-                <h2>Technology</h2>
-                <p>Technology details...</p>
-            </div>
-        </section>
-
-        <section id="analysis">
-            <div class="card">
-                <h2>Analysis</h2>
-                <input type="file" id="fileInput">
-                <button onclick="loadDemoData()">Demo Data</button>
-                <button onclick="resetZoom()">Reset Zoom</button>
-
-                <canvas id="lineChart"></canvas>
-                <canvas id="barChart"></canvas>
-                <canvas id="pieChart"></canvas>
-                <canvas id="areaChart"></canvas>
-                <canvas id="scatterChart"></canvas>
-            </div>
-        </section>
-
-        <section id="team">
-            <div class="card">
-                <h2>Team Members</h2>
-                <ul>
-                    <li>Soghara Begum - Y237258053 (Leader)</li>
-                    <li>Gowri Likeerthana - Y237258020</li>
-                    <li>Gudavalli Naga Pavani - Y237258021</li>
-                </ul>
-            </div>
-        </section>
-    </main>
 </div>
 
 <footer>
-    This project is designed by B.Com students from SSR Degree College under the guidance of K. Jagan Sir.
+    This project is designed by B.Com students from SSR Degree College under the esteemed guidance of K. Jagan Sir.
 </footer>
 
 <script>
+function toggleMenu() {
+    document.getElementById('sidebar').classList.toggle('active');
+}
 function showSection(id) {
     document.querySelectorAll('section').forEach(sec => sec.classList.remove('active'));
     document.getElementById(id).classList.add('active');
     if (window.innerWidth <= 768) toggleMenu();
 }
-function toggleMenu() {
-    document.getElementById('sidebar').classList.toggle('active');
-}
 
-// Chart.js Defaults for black labels
-Chart.defaults.color = '#000';
-Chart.defaults.plugins.legend.labels.color = '#000';
-Chart.defaults.plugins.title.color = '#000';
-
-// Chart instances
-let charts = {};
-
-function createCharts(labels, confirmed, recovered, deaths) {
-    if (Object.keys(charts).length) {
-        Object.values(charts).forEach(c => c.destroy());
-    }
-
-    const options = {
+// Chart setup
+let charts = [];
+function createCharts(labels, data1, data2, data3) {
+    charts.forEach(c => c.destroy());
+    charts = [];
+    const commonOptions = {
         responsive: true,
         plugins: {
+            legend: { labels: { color: 'black' } },
             zoom: {
-                zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'xy' },
-                pan: { enabled: true, mode: 'xy' }
+                zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'x' },
+                pan: { enabled: true, mode: 'x' }
             }
+        },
+        scales: {
+            x: { ticks: { color: 'black' } },
+            y: { ticks: { color: 'black' } }
         }
     };
-
-    charts.line = new Chart(document.getElementById('lineChart'), {
+    charts.push(new Chart(document.getElementById('chart1'), {
         type: 'line',
-        data: { labels, datasets: [
-            { label: 'Confirmed', data: confirmed, borderColor: 'blue', fill: false },
-            { label: 'Recovered', data: recovered, borderColor: 'green', fill: false },
-            { label: 'Deaths', data: deaths, borderColor: 'red', fill: false }
-        ] },
-        options
-    });
-
-    charts.bar = new Chart(document.getElementById('barChart'), {
+        data: { labels, datasets: [{ label: 'Confirmed', data: data1, borderColor: 'red', fill: false }] },
+        options: commonOptions
+    }));
+    charts.push(new Chart(document.getElementById('chart2'), {
         type: 'bar',
-        data: { labels, datasets: [
-            { label: 'Confirmed', data: confirmed, backgroundColor: 'blue' },
-            { label: 'Recovered', data: recovered, backgroundColor: 'green' },
-            { label: 'Deaths', data: deaths, backgroundColor: 'red' }
-        ] },
-        options
-    });
-
-    charts.pie = new Chart(document.getElementById('pieChart'), {
-        type: 'pie',
-        data: { labels: ['Confirmed', 'Recovered', 'Deaths'],
-            datasets: [{ data: [confirmed.reduce((a,b)=>a+b,0), recovered.reduce((a,b)=>a+b,0), deaths.reduce((a,b)=>a+b,0)],
-            backgroundColor: ['blue', 'green', 'red'] }]
-    });
-
-    charts.area = new Chart(document.getElementById('areaChart'), {
+        data: { labels, datasets: [{ label: 'Recovered', data: data2, backgroundColor: 'green' }] },
+        options: commonOptions
+    }));
+    charts.push(new Chart(document.getElementById('chart3'), {
         type: 'line',
-        data: { labels, datasets: [
-            { label: 'Confirmed', data: confirmed, borderColor: 'blue', backgroundColor: 'rgba(0,0,255,0.3)', fill: true }
-        ] },
-        options
-    });
-
-    charts.scatter = new Chart(document.getElementById('scatterChart'), {
-        type: 'scatter',
-        data: {
-            datasets: [{
-                label: 'Confirmed vs Deaths',
-                data: labels.map((_, i) => ({x: confirmed[i], y: deaths[i]})),
-                backgroundColor: 'purple'
-            }]
-        },
-        options
-    });
+        data: { labels, datasets: [{ label: 'Deaths', data: data3, borderColor: 'black', fill: false }] },
+        options: commonOptions
+    }));
 }
-
+function resetZoomAll() {
+    charts.forEach(c => c.resetZoom());
+}
 function loadDemoData() {
-    let labels = [];
-    let confirmed = [];
-    let recovered = [];
-    let deaths = [];
-
-    for (let i = 1; i <= 365; i++) {
-        labels.push(`Day ${i}`);
-        confirmed.push(Math.floor(Math.random()*5000)+500);
-        recovered.push(Math.floor(Math.random()*4000)+300);
-        deaths.push(Math.floor(Math.random()*200)+10);
-    }
+    const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+    const confirmed = [500, 1000, 2000, 1500, 2500, 3000];
+    const recovered = [200, 800, 1500, 1200, 2000, 2500];
+    const deaths = [50, 100, 200, 150, 180, 200];
     createCharts(labels, confirmed, recovered, deaths);
 }
-
-document.getElementById('fileInput').addEventListener('change', function(evt) {
-    const file = evt.target.files[0];
+document.getElementById('fileInput').addEventListener('change', function(e) {
     const reader = new FileReader();
-    reader.onload = function(e) {
-        const data = XLSX.read(e.target.result, { type: 'binary' });
-        const sheetName = data.SheetNames[0];
-        const sheet = XLSX.utils.sheet_to_json(data.Sheets[sheetName]);
-        let labels = sheet.map(r => r.Date || r.date);
-        let confirmed = sheet.map(r => r.Confirmed || 0);
-        let recovered = sheet.map(r => r.Recovered || 0);
-        let deaths = sheet.map(r => r.Deaths || 0);
+    reader.onload = function() {
+        const lines = reader.result.split('\n').map(l => l.split(','));
+        const labels = [];
+        const confirmed = [];
+        const recovered = [];
+        const deaths = [];
+        for (let i = 1; i < lines.length; i++) {
+            labels.push(lines[i][0]);
+            confirmed.push(+lines[i][1]);
+            recovered.push(+lines[i][2]);
+            deaths.push(+lines[i][3]);
+        }
         createCharts(labels, confirmed, recovered, deaths);
     };
-    reader.readAsBinaryString(file);
+    reader.readAsText(e.target.files[0]);
 });
-
-function resetZoom() {
-    Object.values(charts).forEach(c => c.resetZoom());
-}
 </script>
 
 </body>
