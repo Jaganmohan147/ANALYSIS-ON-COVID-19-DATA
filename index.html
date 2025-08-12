@@ -3,176 +3,166 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ANALYSIS ON COVID-19 DATA</title>
+<title>COVID-19 Data Analysis Dashboard</title>
+
+<!-- Chart.js and XLSX -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
 <style>
-    body {
-        margin: 0;
-        font-family: Arial, sans-serif;
-        background: url('https://static1.squarespace.com/static/5e6613a1dc75b87df82b78e1/t/5e6b98beede584624b3f3c97/1584109761526/SoMe-image.jpg?format=1500w') no-repeat center center/cover;
-        color: white;
-        display: flex;
-        min-height: 100vh;
-        flex-direction: column;
-    }
-    header {
-        background: rgba(0,0,0,0.8);
-        padding: 10px;
-        text-align: center;
-        font-size: 1.5em;
-        font-weight: bold;
-        position: relative;
-    }
-    .burger {
-        display: none;
-        position: absolute;
-        right: 10px;
-        top: 15px;
-        cursor: pointer;
-        font-size: 24px;
-    }
-    .container {
-        flex: 1;
-        display: flex;
-    }
+/* ====== MAIN PAGE STYLES ====== */
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: url('https://images.unsplash.com/photo-1584036561566-baf8f5f1b144') no-repeat center center/cover;
+    color: white;
+    display: flex;
+    min-height: 100vh;
+    flex-direction: column;
+}
+header {
+    background: rgba(0,0,0,0.8);
+    padding: 10px;
+    text-align: center;
+    font-size: 1.5em;
+    font-weight: bold;
+}
+.container {
+    flex: 1;
+    display: flex;
+}
+nav {
+    width: 250px;
+    background: rgba(0,0,0,0.85);
+    padding-top: 20px;
+    transition: transform 0.3s ease;
+}
+nav a {
+    display: block;
+    padding: 12px;
+    color: white;
+    text-decoration: none;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+nav a:hover {
+    background: rgba(255,255,255,0.2);
+}
+main {
+    flex: 1;
+    padding: 20px;
+    background: rgba(0,0,0,0.6);
+    overflow-y: auto;
+}
+section {
+    display: none;
+    animation: fadeIn 0.5s ease;
+}
+section.active {
+    display: block;
+}
+.card {
+    background: rgba(255,255,255,0.15);
+    padding: 20px;
+    margin-bottom: 20px;
+    border-radius: 10px;
+}
+footer {
+    background: rgba(0,0,0,0.85);
+    text-align: center;
+    padding: 10px;
+    font-size: 0.9em;
+    position: sticky;
+    bottom: 0;
+    color: #ccc;
+}
+.burger {
+    display: none;
+    position: absolute;
+    left: 10px;
+    top: 15px;
+    cursor: pointer;
+    font-size: 24px;
+}
+@media(max-width: 768px) {
     nav {
-        width: 250px;
-        background: rgba(0,0,0,0.85);
-        padding-top: 20px;
-        transition: transform 0.3s ease;
         position: fixed;
         top: 0;
-        right: 0;
+        left: 0;
         height: 100%;
-        transform: translateX(0);
+        transform: translateX(-100%);
         z-index: 100;
     }
-    nav a {
-        display: block;
-        padding: 12px;
-        color: white;
-        text-decoration: none;
-        border-bottom: 1px solid rgba(255,255,255,0.1);
+    nav.active {
+        transform: translateX(0);
     }
-    nav a:hover {
-        background: rgba(255,255,255,0.2);
-    }
-    main {
-        flex: 1;
-        padding: 20px;
-        background: rgba(0,0,0,0.6);
-        overflow-y: auto;
-        margin-right: 250px; /* space for right nav */
-    }
-    section {
-        display: none;
-        animation: fadeIn 0.5s ease;
-    }
-    section.active {
+    .burger {
         display: block;
     }
-    .card {
-        background: rgba(255,255,255,0.15);
-        padding: 20px;
-        margin-bottom: 20px;
-        border-radius: 10px;
+    .container {
+        flex-direction: column;
     }
-    footer {
-        background: rgba(0,0,0,0.85);
-        text-align: center;
-        padding: 10px;
-        font-size: 0.9em;
-        color: #ccc;
-    }
-    @media(max-width: 768px) {
-        nav {
-            transform: translateX(100%);
-        }
-        nav.active {
-            transform: translateX(0);
-        }
-        .burger {
-            display: block;
-        }
-        main {
-            margin-right: 0;
-        }
-    }
-    @keyframes fadeIn {
-        from {opacity: 0;}
-        to {opacity: 1;}
-    }
-    canvas {
-        background: white;
-        border-radius: 10px;
-        padding: 10px;
-    }
+}
+@keyframes fadeIn {
+    from {opacity: 0;}
+    to {opacity: 1;}
+}
+
+/* ====== GRAPH DASHBOARD STYLES ====== */
+:root{
+  --glass: rgba(255,255,255,0.08);
+  --accent: #f39c12;
+  --muted: #dfeef0;
+  --card-radius: 12px;
+}
+.graph-header{
+  background: linear-gradient(90deg, rgba(0,0,0,0.7), rgba(0,0,0,0.9));
+  padding:14px 18px;
+  display:flex; align-items:center; gap:12px;
+}
+.brand{
+  display:flex; align-items:center; gap:12px;
+}
+.logo {
+  width:44px;height:44px;border-radius:8px;background:linear-gradient(135deg,var(--accent),#d35400);
+  display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;
+}
+.top-actions { margin-left:auto; display:flex; gap:10px; align-items:center; }
+.btn { background:var(--accent); color:#3a1a00; padding:8px 12px; border-radius:8px; border:none; cursor:pointer; font-weight:600; }
+.btn.ghost { background: transparent; color:var(--muted); border:1px solid rgba(255,255,255,0.06); }
+.graph-main { padding:18px; display:grid; grid-template-columns: 300px 1fr; gap:18px; }
+.sidebar {
+  background: var(--glass);
+  padding:14px;
+  border-radius: var(--card-radius);
+}
+.sidebar h3{margin:0 0 8px 0;font-size:14px;color:var(--muted)}
+select, input[type="date"] {
+  width:100%; padding:8px; border-radius:8px;
+  background: rgba(10,10,10,0.3); color:var(--muted); font-size:13px;
+}
+.content {
+  display:flex; flex-direction:column; gap:18px;
+}
+.graph-card {
+  background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));
+  border-radius: var(--card-radius);
+  padding:14px;
+}
+.charts-grid {
+  display:grid; grid-template-columns: repeat(2, 1fr); gap:14px;
+}
+.full { grid-column: 1 / -1; }
+canvas { background: transparent; border-radius:8px; }
 </style>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.0"></script>
 </head>
 <body>
 
 <header>
-    ANALYSIS ON COVID-19 DATA
     <span class="burger" onclick="toggleMenu()">☰</span>
+    COVID-19 DATA ANALYSIS
 </header>
 
 <div class="container">
-    <main>
-        <section id="abstract" class="active">
-            <div class="card">
-                <h2>Abstract</h2>
-                <p>The COVID-19 pandemic... [your abstract text here]</p>
-            </div>
-        </section>
-        <section id="introduction">
-            <div class="card">
-                <h2>Introduction</h2>
-                <p>[your introduction text here]</p>
-            </div>
-        </section>
-        <section id="proposed">
-            <div class="card">
-                <h2>Proposed System</h2>
-                <p>[your proposed system text here]</p>
-            </div>
-        </section>
-        <section id="existing">
-            <div class="card">
-                <h2>Existing System</h2>
-                <p>[your existing system text here]</p>
-            </div>
-        </section>
-        <section id="technology">
-            <div class="card">
-                <h2>Technology</h2>
-                <p>[your technology text here]</p>
-            </div>
-        </section>
-        <section id="analysis">
-            <div class="card">
-                <h2>Analysis</h2>
-                <input type="file" id="fileInput" accept=".csv">
-                <button onclick="loadDemoData()">Demo Data</button>
-                <button onclick="resetZoomAll()">Reset Zoom</button>
-                <div>
-                    <canvas id="chart1"></canvas>
-                    <canvas id="chart2"></canvas>
-                    <canvas id="chart3"></canvas>
-                </div>
-            </div>
-        </section>
-        <section id="team">
-            <div class="card">
-                <h2>Team Members</h2>
-                <ul>
-                    <li>Member 1</li>
-                    <li>Member 2</li>
-                </ul>
-            </div>
-        </section>
-    </main>
-
     <nav id="sidebar">
         <a href="#" onclick="showSection('abstract')">Abstract</a>
         <a href="#" onclick="showSection('introduction')">Introduction</a>
@@ -182,86 +172,173 @@
         <a href="#" onclick="showSection('analysis')">Analysis</a>
         <a href="#" onclick="showSection('team')">Team Members</a>
     </nav>
+
+    <main>
+        <section id="abstract" class="active">
+            <div class="card"><h2>Abstract</h2>
+            <p>This project focuses on analyzing COVID-19 datasets to identify trends, patterns, and the spread of the virus across different regions. Using web-based visualizations, users can explore daily new cases, deaths, and recovery rates in an interactive manner.</p></div>
+        </section>
+
+        <section id="introduction"><div class="card"><h2>Introduction</h2><p>COVID-19 has impacted every nation globally, generating large amounts of data on infection rates, mortality, and recovery. This project aims to simplify the analysis of such datasets for better understanding and decision-making.</p></div></section>
+        <section id="proposed"><div class="card"><h2>Proposed System</h2><p>We propose a web app that lets users upload COVID-19 data in Excel format and visualize it through interactive charts. The system supports filtering by country and date range.</p></div></section>
+        <section id="existing"><div class="card"><h2>Existing System</h2><p>Existing dashboards like WHO and Johns Hopkins provide COVID stats but lack simple upload & filter capability for custom datasets.</p></div></section>
+        <section id="technology"><div class="card"><h2>Technology</h2><p>Built using HTML, CSS, JavaScript, Chart.js, and SheetJS for Excel parsing.</p></div></section>
+
+        <!-- ====== ANALYSIS SECTION WITH GRAPHS ====== -->
+        <section id="analysis">
+            <div class="graph-header">
+                <div class="brand">
+                    <div class="logo">C19</div>
+                    <div>
+                        <h1>COVID-19 — Automatic Graphs</h1>
+                        <div style="font-size:12px;color:#ccc;">Upload Excel → Visualize stats</div>
+                    </div>
+                </div>
+                <div class="top-actions">
+                    <button class="btn" id="demoBtn">Load Demo Data</button>
+                    <label class="btn ghost" for="fileInput">Choose Excel file</label>
+                    <input id="fileInput" type="file" accept=".xlsx,.xls" style="display:none" />
+                </div>
+            </div>
+
+            <div class="graph-main">
+                <aside class="sidebar">
+                    <h3>Filters</h3>
+                    <label>Select Country</label>
+                    <select id="countrySelect"></select>
+                    <label>Date range</label>
+                    <input type="date" id="startDate" />
+                    <input type="date" id="endDate" style="margin-top:5px;" />
+                    <div style="display:flex;gap:8px;margin-top:10px">
+                        <button class="btn" id="applyBtn">Apply</button>
+                        <button class="btn ghost" id="resetBtn">Reset</button>
+                    </div>
+                </aside>
+
+                <section class="content">
+                    <div class="graph-card">
+                        <strong>Dataset summary:</strong> <span id="summaryText">No dataset loaded</span>
+                    </div>
+                    <div class="graph-card charts-grid">
+                        <div><canvas id="casesLine"></canvas></div>
+                        <div><canvas id="deathsLine"></canvas></div>
+                        <div class="full"><canvas id="totalCasesBar"></canvas></div>
+                    </div>
+                </section>
+            </div>
+        </section>
+
+        <section id="team"><div class="card"><h2>Team Members</h2>
+        <ul><li>Member 1</li><li>Member 2</li></ul></div></section>
+    </main>
 </div>
 
 <footer>
-    This project is designed by B.Com students from SSR Degree College under the esteemed guidance of K. Jagan Sir.
+    Designed by Students under the guidance of K. Jagan Sir.
 </footer>
 
 <script>
-function toggleMenu() {
-    document.getElementById('sidebar').classList.toggle('active');
-}
 function showSection(id) {
     document.querySelectorAll('section').forEach(sec => sec.classList.remove('active'));
     document.getElementById(id).classList.add('active');
     if (window.innerWidth <= 768) toggleMenu();
 }
+function toggleMenu() {
+    document.getElementById('sidebar').classList.toggle('active');
+}
 
-// Chart setup
-let charts = [];
-function createCharts(labels, data1, data2, data3) {
-    charts.forEach(c => c.destroy());
-    charts = [];
-    const commonOptions = {
-        responsive: true,
-        plugins: {
-            legend: { labels: { color: 'black' } },
-            zoom: {
-                zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'x' },
-                pan: { enabled: true, mode: 'x' }
-            }
-        },
-        scales: {
-            x: { ticks: { color: 'black' } },
-            y: { ticks: { color: 'black' } }
-        }
-    };
-    charts.push(new Chart(document.getElementById('chart1'), {
-        type: 'line',
-        data: { labels, datasets: [{ label: 'Confirmed', data: data1, borderColor: 'red', fill: false }] },
-        options: commonOptions
-    }));
-    charts.push(new Chart(document.getElementById('chart2'), {
-        type: 'bar',
-        data: { labels, datasets: [{ label: 'Recovered', data: data2, backgroundColor: 'green' }] },
-        options: commonOptions
-    }));
-    charts.push(new Chart(document.getElementById('chart3'), {
-        type: 'line',
-        data: { labels, datasets: [{ label: 'Deaths', data: data3, borderColor: 'black', fill: false }] },
-        options: commonOptions
-    }));
-}
-function resetZoomAll() {
-    charts.forEach(c => c.resetZoom());
-}
-function loadDemoData() {
-    const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
-    const confirmed = [500, 1000, 2000, 1500, 2500, 3000];
-    const recovered = [200, 800, 1500, 1200, 2000, 2500];
-    const deaths = [50, 100, 200, 150, 180, 200];
-    createCharts(labels, confirmed, recovered, deaths);
-}
-document.getElementById('fileInput').addEventListener('change', function(e) {
-    const reader = new FileReader();
-    reader.onload = function() {
-        const lines = reader.result.split('\n').map(l => l.split(','));
-        const labels = [];
-        const confirmed = [];
-        const recovered = [];
-        const deaths = [];
-        for (let i = 1; i < lines.length; i++) {
-            labels.push(lines[i][0]);
-            confirmed.push(+lines[i][1]);
-            recovered.push(+lines[i][2]);
-            deaths.push(+lines[i][3]);
-        }
-        createCharts(labels, confirmed, recovered, deaths);
-    };
-    reader.readAsText(e.target.files[0]);
+let rawRows = [], charts = [];
+const countrySelect = document.getElementById('countrySelect');
+const summaryText = document.getElementById('summaryText');
+function clearCharts() { charts.forEach(c => c.destroy()); charts = []; }
+function formatDateISO(d) { if(!d) return ''; return d.toISOString().split('T')[0]; }
+function parseDateFlexible(v) { if (v instanceof Date) return v; let d = new Date(v); if (!isNaN(d)) return d; return null; }
+function findKey(row, candidates) { const keys = Object.keys(row); for (const c of candidates) { for (const k of keys) { if (k.toLowerCase().trim() === c.toLowerCase().trim()) return k; } } return null; }
+
+document.getElementById('fileInput').addEventListener('change', async evt => {
+  const f = evt.target.files[0]; if (!f) return;
+  const buf = await f.arrayBuffer();
+  const wb = XLSX.read(buf, {type:'array', cellDates:true});
+  const sheet = wb.Sheets[wb.SheetNames[0]];
+  const data = XLSX.utils.sheet_to_json(sheet, {defval:null});
+  loadDataset(data);
 });
-</script>
 
+document.getElementById('demoBtn').addEventListener('click', () => {
+  const countries = ['India','USA','Brazil','UK','Germany'];
+  const demo = [];
+  const startDate = new Date('2020-03-01');
+  for(let i=0;i<30;i++){
+    const d = new Date(startDate); d.setDate(startDate.getDate()+i);
+    const country = countries[i % countries.length];
+    demo.push({
+      Date: formatDateISO(d),
+      Country: country,
+      New_Cases: Math.floor(Math.random()*50000),
+      New_Deaths: Math.floor(Math.random()*1000),
+      Total_Cases: Math.floor(Math.random()*1000000),
+      Total_Deaths: Math.floor(Math.random()*50000),
+      Recovered: Math.floor(Math.random()*900000)
+    });
+  }
+  loadDataset(demo);
+});
+
+function loadDataset(rows) {
+  const sample = rows[0];
+  const dateKey = findKey(sample, ['Date']);
+  const countryKey = findKey(sample, ['Country']);
+  const newCasesKey = findKey(sample, ['New_Cases']);
+  const newDeathsKey = findKey(sample, ['New_Deaths']);
+  const totalCasesKey = findKey(sample, ['Total_Cases']);
+  const totalDeathsKey = findKey(sample, ['Total_Deaths']);
+
+  rawRows = rows.map(r => ({
+    Date: parseDateFlexible(r[dateKey]),
+    Country: r[countryKey],
+    New_Cases: Number(r[newCasesKey])||0,
+    New_Deaths: Number(r[newDeathsKey])||0,
+    Total_Cases: Number(r[totalCasesKey])||0,
+    Total_Deaths: Number(r[totalDeathsKey])||0
+  })).filter(r => r.Date);
+
+  const countries = [...new Set(rawRows.map(r => r.Country))].sort();
+  countrySelect.innerHTML = '<option value="__all">All Countries</option>' + countries.map(t=>`<option>${t}</option>`).join('');
+  summaryText.textContent = `Records: ${rawRows.length} — Countries: ${countries.length}`;
+  drawAllCharts();
+}
+
+function filterRows(country) {
+  return rawRows.filter(r => country==='__all'||r.Country===country);
+}
+
+function drawAllCharts(){
+  const filtered = filterRows(countrySelect.value);
+  clearCharts();
+
+  const labels = filtered.map(r => formatDateISO(r.Date));
+  const newCases = filtered.map(r=>r.New_Cases);
+  const newDeaths = filtered.map(r=>r.New_Deaths);
+  const totalCases = filtered.map(r=>r.Total_Cases);
+
+  charts.push(new Chart(document.getElementById('casesLine'), {
+    type:'line',
+    data:{labels, datasets:[{label:'New Cases', data:newCases, borderColor:'orange', fill:false}]}
+  }));
+
+  charts.push(new Chart(document.getElementById('deathsLine'), {
+    type:'line',
+    data:{labels, datasets:[{label:'New Deaths', data:newDeaths, borderColor:'red', fill:false}]}
+  }));
+
+  charts.push(new Chart(document.getElementById('totalCasesBar'), {
+    type:'bar',
+    data:{labels, datasets:[{label:'Total Cases', data:totalCases, backgroundColor:'blue'}]}
+  }));
+}
+
+document.getElementById('applyBtn').addEventListener('click', drawAllCharts);
+document.getElementById('resetBtn').addEventListener('click', ()=>{countrySelect.value='__all'; drawAllCharts();});
+</script>
 </body>
 </html>
