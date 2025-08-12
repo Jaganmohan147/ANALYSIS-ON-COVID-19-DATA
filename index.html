@@ -5,151 +5,112 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ANALYSIS ON COVID-19 DATA</title>
 
-<!-- Chart.js & SheetJS -->
+<!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<!-- PapaParse for CSV parsing -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
 
 <style>
-/* ===== MAIN PAGE STYLES ===== */
-body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    background: url('https://static1.squarespace.com/static/5e6613a1dc75b87df82b78e1/t/5e6b98beede584624b3f3c97/1584109761526/SoMe-image.jpg?format=1500w') no-repeat center center/cover;
-    color: white;
-    display: flex;
-    min-height: 100vh;
-    flex-direction: column;
-}
-header {
-    background: rgba(0,0,0,0.8);
-    padding: 10px;
-    text-align: center;
-    font-size: 1.5em;
-    font-weight: bold;
-}
-.container {
-    flex: 1;
-    display: flex;
-}
-nav {
-    width: 250px;
-    background: rgba(0,0,0,0.85);
-    padding-top: 20px;
-    transition: transform 0.3s ease;
-}
-nav a {
-    display: block;
-    padding: 12px;
-    color: white;
-    text-decoration: none;
-    border-bottom: 1px solid rgba(255,255,255,0.1);
-}
-nav a:hover {
-    background: rgba(255,255,255,0.2);
-}
-main {
-    flex: 1;
-    padding: 20px;
-    background: rgba(0,0,0,0.6);
-    overflow-y: auto;
-}
-section {
-    display: none;
-    animation: fadeIn 0.5s ease;
-}
-section.active {
-    display: block;
-}
-.card {
-    background: rgba(255,255,255,0.15);
-    padding: 20px;
-    margin-bottom: 20px;
-    border-radius: 10px;
-}
-footer {
-    background: rgba(0,0,0,0.85);
-    text-align: center;
-    padding: 10px;
-    font-size: 0.9em;
-    position: sticky;
-    bottom: 0;
-    color: #ccc;
-}
-.burger {
-    display: none;
-    position: absolute;
-    left: 10px;
-    top: 15px;
-    cursor: pointer;
-    font-size: 24px;
-}
-@media(max-width: 768px) {
-    nav {
-        position: fixed;
-        top: 0;
-        left: 0;
-        height: 100%;
-        transform: translateX(-100%);
-        z-index: 100;
-    }
-    nav.active {
-        transform: translateX(0);
-    }
-    .burger {
-        display: block;
-    }
-    .container {
+    body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: url('https://static1.squarespace.com/static/5e6613a1dc75b87df82b78e1/t/5e6b98beede584624b3f3c97/1584109761526/SoMe-image.jpg?format=1500w') no-repeat center center/cover;
+        color: white;
+        display: flex;
+        min-height: 100vh;
         flex-direction: column;
     }
-}
-@keyframes fadeIn {
-    from {opacity: 0;}
-    to {opacity: 1;}
-}
-
-/* ===== GRAPH DASHBOARD STYLES (from graph.html) ===== */
-:root{
-  --glass: rgba(255,255,255,0.08);
-  --accent: #1db954;
-  --muted: #dfeef0;
-  --card-radius: 12px;
-}
-.graph-header {
-  background: linear-gradient(90deg, rgba(0,0,0,0.35), rgba(0,0,0,0.45));
-  padding:14px 18px;
-  display:flex; align-items:center; gap:12px;
-}
-.brand { display:flex; align-items:center; gap:12px; }
-.logo {
-  width:44px;height:44px;border-radius:8px;
-  background:linear-gradient(135deg,var(--accent),#0abf7a);
-  display:flex;align-items:center;justify-content:center;font-weight:700;color:#02110a;
-}
-.top-actions { margin-left:auto; display:flex; gap:10px; align-items:center; }
-.btn { background:var(--accent); color:#04110a; padding:8px 12px; border-radius:8px; border:none; cursor:pointer; font-weight:600; }
-.btn.ghost { background: transparent; color:var(--muted); border:1px solid rgba(255,255,255,0.06); }
-.graph-main { padding:18px; display:grid; grid-template-columns: 300px 1fr; gap:18px; }
-.sidebar {
-  background: var(--glass);
-  padding:14px;
-  border-radius: var(--card-radius);
-}
-.sidebar h3{margin:0 0 8px 0;font-size:14px;color:var(--muted)}
-select, input[type="date"] {
-  width:100%; padding:8px; border-radius:8px;
-  background: rgba(10,10,10,0.35); color:var(--muted);
-}
-.content { display:flex; flex-direction:column; gap:18px; }
-.graph-card {
-  background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));
-  border-radius: var(--card-radius);
-  padding:14px;
-}
-.charts-grid {
-  display:grid; grid-template-columns: repeat(2, 1fr); gap:14px;
-}
-.full { grid-column: 1 / -1; }
-canvas { background: transparent; border-radius:8px; }
+    header {
+        background: rgba(0,0,0,0.8);
+        padding: 10px;
+        text-align: center;
+        font-size: 1.5em;
+        font-weight: bold;
+    }
+    .container {
+        flex: 1;
+        display: flex;
+    }
+    nav {
+        width: 250px;
+        background: rgba(0,0,0,0.85);
+        padding-top: 20px;
+        transition: transform 0.3s ease;
+    }
+    nav a {
+        display: block;
+        padding: 12px;
+        color: white;
+        text-decoration: none;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    nav a:hover {
+        background: rgba(255,255,255,0.2);
+    }
+    main {
+        flex: 1;
+        padding: 20px;
+        background: rgba(0,0,0,0.6);
+        overflow-y: auto;
+    }
+    section {
+        display: none;
+        animation: fadeIn 0.5s ease;
+    }
+    section.active {
+        display: block;
+    }
+    .card {
+        background: rgba(255,255,255,0.15);
+        padding: 20px;
+        margin-bottom: 20px;
+        border-radius: 10px;
+    }
+    footer {
+        background: rgba(0,0,0,0.85);
+        text-align: center;
+        padding: 10px;
+        font-size: 0.9em;
+        position: sticky;
+        bottom: 0;
+        color: #ccc;
+    }
+    .burger {
+        display: none;
+        position: absolute;
+        left: 10px;
+        top: 15px;
+        cursor: pointer;
+        font-size: 24px;
+    }
+    @media(max-width: 768px) {
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100%;
+            transform: translateX(-100%);
+            z-index: 100;
+        }
+        nav.active {
+            transform: translateX(0);
+        }
+        .burger {
+            display: block;
+        }
+        .container {
+            flex-direction: column;
+        }
+    }
+    @keyframes fadeIn {
+        from {opacity: 0;}
+        to {opacity: 1;}
+    }
+    canvas {
+        background: white;
+        border-radius: 10px;
+        padding: 10px;
+    }
 </style>
 </head>
 <body>
@@ -171,86 +132,166 @@ canvas { background: transparent; border-radius:8px; }
     </nav>
 
     <main>
-        <section id="abstract" class="active"><div class="card"><h2>Abstract</h2><p>...</p></div></section>
-        <section id="introduction"><div class="card"><h2>Introduction</h2><p>...</p></div></section>
-        <section id="proposed"><div class="card"><h2>Proposed System</h2><p>...</p></div></section>
-        <section id="existing"><div class="card"><h2>Existing System</h2><p>...</p></div></section>
-        <section id="technology"><div class="card"><h2>Technology</h2><p>...</p></div></section>
-
-        <!-- ===== Analysis Section with Integrated Graphs ===== -->
-        <section id="analysis">
-            <div class="graph-header">
-                <div class="brand">
-                    <div class="logo">SSR</div>
-                    <div>
-                        <h1>COVID-19 2021 — Automatic Graphs</h1>
-                        <div style="font-size:12px;color:#ccc;">Upload Excel → Visualize multiple charts</div>
-                    </div>
-                </div>
-                <div class="top-actions">
-                    <button class="btn" id="demoBtn">Load Demo Data</button>
-                    <label class="btn ghost" for="fileInput">Choose Excel file</label>
-                    <input id="fileInput" type="file" accept=".xlsx,.xls" style="display:none">
-                </div>
-            </div>
-
-            <div class="graph-main">
-                <aside class="sidebar">
-                    <h3>Controls</h3>
-                    <label>Select country</label>
-                    <select id="countrySelect"></select>
-                    <label>Date range</label>
-                    <input type="date" id="startDate" /><input type="date" id="endDate" style="margin-top:5px;">
-                    <label>Smoothing</label>
-                    <select id="smoothing"><option value="1">No smoothing</option><option value="3">3-day</option><option value="7" selected>7-day</option></select>
-                    <div style="display:flex;gap:8px;margin-top:10px">
-                        <button class="btn" id="applyBtn">Apply</button>
-                        <button class="btn ghost" id="resetBtn">Reset</button>
-                    </div>
-                </aside>
-
-                <section class="content">
-                    <div class="graph-card"><strong>Dataset summary:</strong> <span id="summaryText">No dataset loaded</span></div>
-                    <div class="graph-card charts-grid">
-                        <div><canvas id="casesLine"></canvas></div>
-                        <div><canvas id="deathsLine"></canvas></div>
-                        <div class="full"><canvas id="stackedArea"></canvas></div>
-                        <div><canvas id="casesByCountry"></canvas></div>
-                        <div><canvas id="vaccinationsByCountry"></canvas></div>
-                    </div>
-                </section>
+        <section id="abstract" class="active">
+            <div class="card">
+                <h2>Abstract</h2>
+                <p>The COVID-19 pandemic, caused by the SARS-CoV-2 virus, has affected millions worldwide. Understanding trends in confirmed cases, recoveries, and deaths is crucial for decision-making. This project visualizes COVID-19 data for 2021 using interactive charts, allowing uploads of CSV files or loading demo data instantly.</p>
             </div>
         </section>
 
-        <section id="team"><div class="card"><h2>Team Members</h2><ul><li>...</li></ul></div></section>
+        <section id="introduction">
+            <div class="card">
+                <h2>Introduction</h2>
+                <p>COVID-19 has challenged global health systems. Data analysis helps track the spread, identify peaks, and understand recovery trends. This project provides a web-based visualization tool accessible to researchers, students, and the public.</p>
+            </div>
+        </section>
+
+        <section id="proposed">
+            <div class="card">
+                <h2>Proposed System</h2>
+                <p>A web-based system that accepts CSV uploads and generates 5 interactive graphs:
+                <br>1. Line Chart – Trend over time
+                <br>2. Bar Chart – Daily confirmed cases
+                <br>3. Pie Chart – Case proportions
+                <br>4. Area Chart – Cumulative growth
+                <br>5. Scatter Plot – Deaths vs. Cases</p>
+            </div>
+        </section>
+
+        <section id="existing">
+            <div class="card">
+                <h2>Existing System</h2>
+                <p>Most dashboards provide static or limited interactivity. Few allow custom dataset uploads or flexible chart selection. This project addresses those gaps.</p>
+            </div>
+        </section>
+
+        <section id="technology">
+            <div class="card">
+                <h2>Technology</h2>
+                <p>HTML5, CSS3, JavaScript, Chart.js, PapaParse (for CSV parsing)</p>
+            </div>
+        </section>
+
+        <section id="analysis">
+            <div class="card">
+                <h2>Analysis</h2>
+                <input type="file" id="fileInput" accept=".csv">
+                <button onclick="loadDemoData()">Load Demo Data</button>
+                <br><br>
+                <canvas id="lineChart"></canvas><br>
+                <canvas id="barChart"></canvas><br>
+                <canvas id="pieChart"></canvas><br>
+                <canvas id="areaChart"></canvas><br>
+                <canvas id="scatterChart"></canvas>
+            </div>
+        </section>
+
+        <section id="team">
+            <div class="card">
+                <h2>Team Members</h2>
+                <ul>
+                    <li>Soghara Begum - Y237258053 (TEAM LEADER)</li>
+                    <li>Gowri Likeerthana - Y237258020</li>
+                    <li>Gudavalli Naga Pavani - Y237258021</li>
+                    <li>Guddeti Preethi - Y237258022</li>
+                    <li>Gundarapu Dedeepya Bhanu - Y237258023</li>
+                    <li>Kode Sree Sudha - Y237258028</li>
+                    <li>Kona Praveena - Y237258029</li>
+                    <li>Palisetti Venkat - Y237258038</li>
+                    <li>Yarra Sai Durga Suresh - Y237258060</li>
+                </ul>
+            </div>
+        </section>
     </main>
 </div>
 
 <footer>
-    This project is designed by B.Com students from SSR Degree College under the esteemed guidance of K. Jagan Sir.
+    This project is designed by B.Com students from SSR Degree College under the guidance of K. Jagan Sir.
 </footer>
 
 <script>
-function showSection(id){document.querySelectorAll('section').forEach(sec=>sec.classList.remove('active'));document.getElementById(id).classList.add('active');if(window.innerWidth<=768)toggleMenu();}
-function toggleMenu(){document.getElementById('sidebar').classList.toggle('active');}
-</script>
+function showSection(id) {
+    document.querySelectorAll('section').forEach(sec => sec.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    if (window.innerWidth <= 768) toggleMenu();
+}
+function toggleMenu() {
+    document.getElementById('sidebar').classList.toggle('active');
+}
 
-<!-- ===== Graph.js Logic from graph.html ===== -->
-<script>
-// (Insert full JavaScript from your COVID graph.html here unchanged)
-    Chart.defaults.color = '#ffffff'; // All text white
-Chart.defaults.plugins.legend.labels.color = '#ffffff'; // Legend labels
-Chart.defaults.plugins.title.color = '#ffffff'; // Chart titles
-Chart.defaults.scales = {
-    x: {
-        ticks: { color: '#ffffff' },
-        grid: { color: 'rgba(255,255,255,0.2)' }
-    },
-    y: {
-        ticks: { color: '#ffffff' },
-        grid: { color: 'rgba(255,255,255,0.2)' }
+// Chart.js Defaults for Black Labels
+Chart.defaults.color = '#000';
+Chart.defaults.plugins.legend.labels.color = '#000';
+Chart.defaults.plugins.title.color = '#000';
+
+// Chart Variables
+let charts = {};
+
+// Render Charts
+function renderCharts(data) {
+    // Destroy old charts
+    for (let key in charts) { charts[key].destroy(); }
+
+    const dates = data.map(row => row.Date);
+    const cases = data.map(row => row.Cases);
+    const recoveries = data.map(row => row.Recoveries);
+    const deaths = data.map(row => row.Deaths);
+    const cumulativeCases = cases.map((sum => value => sum += value)(0));
+
+    charts.line = new Chart(lineChart, {
+        type: 'line',
+        data: { labels: dates, datasets: [{ label: 'Cases', data: cases, borderColor: 'red', fill: false }] }
+    });
+
+    charts.bar = new Chart(barChart, {
+        type: 'bar',
+        data: { labels: dates, datasets: [{ label: 'Daily Cases', data: cases, backgroundColor: 'orange' }] }
+    });
+
+    charts.pie = new Chart(pieChart, {
+        type: 'pie',
+        data: { labels: ['Total Cases', 'Total Recoveries', 'Total Deaths'], datasets: [{ data: [sum(cases), sum(recoveries), sum(deaths)], backgroundColor: ['red', 'green', 'black'] }] }
+    });
+
+    charts.area = new Chart(areaChart, {
+        type: 'line',
+        data: { labels: dates, datasets: [{ label: 'Cumulative Cases', data: cumulativeCases, borderColor: 'blue', backgroundColor: 'lightblue', fill: true }] }
+    });
+
+    charts.scatter = new Chart(scatterChart, {
+        type: 'scatter',
+        data: { datasets: [{ label: 'Deaths vs Cases', data: cases.map((c,i)=>({x:c,y:deaths[i]})), backgroundColor: 'purple' }] }
+    });
+}
+
+function sum(arr) { return arr.reduce((a,b) => a+b, 0); }
+
+// Load Demo Data (Full 2021 Example)
+function loadDemoData() {
+    const demo = [];
+    for (let m = 1; m <= 12; m++) {
+        for (let d = 1; d <= 28; d++) {
+            demo.push({
+                Date: `${d.toString().padStart(2,'0')}-${m.toString().padStart(2,'0')}-2021`,
+                Cases: Math.floor(Math.random()*5000+500),
+                Recoveries: Math.floor(Math.random()*4000+300),
+                Deaths: Math.floor(Math.random()*200+10)
+            });
+        }
     }
-};
+    renderCharts(demo);
+}
+
+// Handle CSV Upload
+document.getElementById('fileInput').addEventListener('change', function(e) {
+    Papa.parse(e.target.files[0], {
+        header: true,
+        dynamicTyping: true,
+        complete: function(results) {
+            renderCharts(results.data);
+        }
+    });
+});
 </script>
 </body>
 </html>
