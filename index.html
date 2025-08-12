@@ -7,7 +7,7 @@
 
 <!-- Chart.js & Plugins -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@1.2.1/dist/chartjs-plugin-zoom.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
 <style>
@@ -75,7 +75,6 @@
         bottom: 0;
         color: #ccc;
     }
-    /* Mobile View */
     .burger {
         display: none;
         position: absolute;
@@ -112,6 +111,18 @@
         border-radius: 10px;
         padding: 10px;
     }
+    button {
+        margin: 5px;
+        padding: 8px 14px;
+        background: #4CAF50;
+        color: white;
+        border: none;
+        cursor: pointer;
+        border-radius: 5px;
+    }
+    button:hover {
+        background: #45a049;
+    }
 </style>
 </head>
 <body>
@@ -136,50 +147,50 @@
         <section id="abstract" class="active">
             <div class="card">
                 <h2>Abstract</h2>
-                <p>The COVID-19 pandemic... (same abstract as before)</p>
+                <p>The COVID-19 pandemic... [your abstract text here]</p>
             </div>
         </section>
 
         <section id="introduction">
             <div class="card">
                 <h2>Introduction</h2>
-                <p>COVID-19 continues to challenge... (same intro as before)</p>
+                <p>COVID-19 continues to challenge global health systems... [your intro text]</p>
             </div>
         </section>
 
         <section id="proposed">
             <div class="card">
                 <h2>Proposed System</h2>
-                <p>The proposed system is a fully web-based... (same proposed system text)</p>
+                <p>Details of proposed system...</p>
             </div>
         </section>
 
         <section id="existing">
             <div class="card">
                 <h2>Existing System</h2>
-                <p>Existing COVID-19 data analysis platforms... (same existing system text)</p>
+                <p>Existing system details...</p>
             </div>
         </section>
 
         <section id="technology">
             <div class="card">
                 <h2>Technology</h2>
-                <p>• Frontend: HTML5, CSS3, JavaScript (Chart.js)...</p>
+                <p>Technology details...</p>
             </div>
         </section>
 
         <section id="analysis">
             <div class="card">
                 <h2>Analysis</h2>
-                <input type="file" id="fileInput" accept=".xlsx, .xls, .csv">
+                <input type="file" id="fileInput">
                 <button onclick="loadDemoData()">Demo Data</button>
-                <div>
-                    <canvas id="lineChart"></canvas>
-                    <canvas id="barChart"></canvas>
-                    <canvas id="pieChart"></canvas>
-                    <canvas id="areaChart"></canvas>
-                    <canvas id="scatterChart"></canvas>
-                </div>
+                <button onclick="resetZoom()">Reset Zoom</button>
+
+                <canvas id="lineChart"></canvas>
+                <canvas id="barChart"></canvas>
+                <canvas id="pieChart"></canvas>
+                <canvas id="areaChart"></canvas>
+                <canvas id="scatterChart"></canvas>
             </div>
         </section>
 
@@ -187,9 +198,9 @@
             <div class="card">
                 <h2>Team Members</h2>
                 <ul>
-                    <li>Soghara Begum - Y237258053 (Team Leader)</li>
+                    <li>Soghara Begum - Y237258053 (Leader)</li>
                     <li>Gowri Likeerthana - Y237258020</li>
-                    <!-- rest of team -->
+                    <li>Gudavalli Naga Pavani - Y237258021</li>
                 </ul>
             </div>
         </section>
@@ -210,93 +221,110 @@ function toggleMenu() {
     document.getElementById('sidebar').classList.toggle('active');
 }
 
-// Chart.js defaults
+// Chart.js Defaults for black labels
 Chart.defaults.color = '#000';
 Chart.defaults.plugins.legend.labels.color = '#000';
 Chart.defaults.plugins.title.color = '#000';
 
-// Chart variables
-let lineChart, barChart, pieChart, areaChart, scatterChart;
+// Chart instances
+let charts = {};
 
 function createCharts(labels, confirmed, recovered, deaths) {
-    if (lineChart) lineChart.destroy();
-    if (barChart) barChart.destroy();
-    if (pieChart) pieChart.destroy();
-    if (areaChart) areaChart.destroy();
-    if (scatterChart) scatterChart.destroy();
+    if (Object.keys(charts).length) {
+        Object.values(charts).forEach(c => c.destroy());
+    }
 
-    const commonOptions = {
+    const options = {
         responsive: true,
         plugins: {
             zoom: {
-                zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'x' },
-                pan: { enabled: true, mode: 'x' }
+                zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'xy' },
+                pan: { enabled: true, mode: 'xy' }
             }
         }
     };
 
-    lineChart = new Chart(document.getElementById('lineChart'), {
+    charts.line = new Chart(document.getElementById('lineChart'), {
         type: 'line',
-        data: { labels, datasets: [{ label: 'Confirmed', data: confirmed, borderColor: 'blue', fill: false }] },
-        options: { ...commonOptions, plugins: { ...commonOptions.plugins, title: { display: true, text: 'Daily Confirmed Cases' } } }
+        data: { labels, datasets: [
+            { label: 'Confirmed', data: confirmed, borderColor: 'blue', fill: false },
+            { label: 'Recovered', data: recovered, borderColor: 'green', fill: false },
+            { label: 'Deaths', data: deaths, borderColor: 'red', fill: false }
+        ] },
+        options
     });
 
-    barChart = new Chart(document.getElementById('barChart'), {
+    charts.bar = new Chart(document.getElementById('barChart'), {
         type: 'bar',
-        data: { labels, datasets: [{ label: 'Deaths', data: deaths, backgroundColor: 'red' }] },
-        options: { ...commonOptions, plugins: { ...commonOptions.plugins, title: { display: true, text: 'Daily Deaths' } } }
+        data: { labels, datasets: [
+            { label: 'Confirmed', data: confirmed, backgroundColor: 'blue' },
+            { label: 'Recovered', data: recovered, backgroundColor: 'green' },
+            { label: 'Deaths', data: deaths, backgroundColor: 'red' }
+        ] },
+        options
     });
 
-    pieChart = new Chart(document.getElementById('pieChart'), {
+    charts.pie = new Chart(document.getElementById('pieChart'), {
         type: 'pie',
-        data: { labels: ['Total Confirmed', 'Total Recovered', 'Total Deaths'], datasets: [{ data: [sum(confirmed), sum(recovered), sum(deaths)], backgroundColor: ['blue', 'green', 'red'] }] },
-        options: { ...commonOptions, plugins: { ...commonOptions.plugins, title: { display: true, text: 'Overall Distribution' } } }
+        data: { labels: ['Confirmed', 'Recovered', 'Deaths'],
+            datasets: [{ data: [confirmed.reduce((a,b)=>a+b,0), recovered.reduce((a,b)=>a+b,0), deaths.reduce((a,b)=>a+b,0)],
+            backgroundColor: ['blue', 'green', 'red'] }]
     });
 
-    areaChart = new Chart(document.getElementById('areaChart'), {
+    charts.area = new Chart(document.getElementById('areaChart'), {
         type: 'line',
-        data: { labels, datasets: [{ label: 'Cumulative Confirmed', data: cumulative(confirmed), backgroundColor: 'rgba(0,0,255,0.3)', fill: true }] },
-        options: { ...commonOptions, plugins: { ...commonOptions.plugins, title: { display: true, text: 'Cumulative Growth' } } }
+        data: { labels, datasets: [
+            { label: 'Confirmed', data: confirmed, borderColor: 'blue', backgroundColor: 'rgba(0,0,255,0.3)', fill: true }
+        ] },
+        options
     });
 
-    scatterChart = new Chart(document.getElementById('scatterChart'), {
+    charts.scatter = new Chart(document.getElementById('scatterChart'), {
         type: 'scatter',
-        data: { datasets: [{ label: 'Confirmed vs Deaths', data: labels.map((_,i)=>({x: confirmed[i], y: deaths[i]})), backgroundColor: 'purple' }] },
-        options: { ...commonOptions, plugins: { ...commonOptions.plugins, title: { display: true, text: 'Confirmed vs Deaths' } }, scales: { x: { title: { display: true, text: 'Confirmed' } }, y: { title: { display: true, text: 'Deaths' } } } }
+        data: {
+            datasets: [{
+                label: 'Confirmed vs Deaths',
+                data: labels.map((_, i) => ({x: confirmed[i], y: deaths[i]})),
+                backgroundColor: 'purple'
+            }]
+        },
+        options
     });
 }
 
 function loadDemoData() {
-    let labels = [], confirmed = [], recovered = [], deaths = [];
+    let labels = [];
+    let confirmed = [];
+    let recovered = [];
+    let deaths = [];
+
     for (let i = 1; i <= 365; i++) {
         labels.push(`Day ${i}`);
-        confirmed.push(Math.floor(Math.random() * 50000) + 1000);
-        recovered.push(Math.floor(Math.random() * 40000) + 500);
-        deaths.push(Math.floor(Math.random() * 1000) + 10);
+        confirmed.push(Math.floor(Math.random()*5000)+500);
+        recovered.push(Math.floor(Math.random()*4000)+300);
+        deaths.push(Math.floor(Math.random()*200)+10);
     }
     createCharts(labels, confirmed, recovered, deaths);
 }
 
-function sum(arr) { return arr.reduce((a,b) => a+b, 0); }
-function cumulative(arr) { return arr.map((v,i)=> arr.slice(0,i+1).reduce((a,b)=>a+b,0)); }
-
-// CSV/Excel upload
-document.getElementById('fileInput').addEventListener('change', handleFile, false);
-function handleFile(e) {
-    const file = e.target.files[0];
+document.getElementById('fileInput').addEventListener('change', function(evt) {
+    const file = evt.target.files[0];
     const reader = new FileReader();
-    reader.onload = function(event) {
-        const data = new Uint8Array(event.target.result);
-        const workbook = XLSX.read(data, {type: 'array'});
-        const sheetName = workbook.SheetNames[0];
-        const sheet = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
-        let labels = sheet.map(row => row.Date || row.date);
-        let confirmed = sheet.map(row => row.Confirmed || row.confirmed);
-        let recovered = sheet.map(row => row.Recovered || row.recovered);
-        let deaths = sheet.map(row => row.Deaths || row.deaths);
+    reader.onload = function(e) {
+        const data = XLSX.read(e.target.result, { type: 'binary' });
+        const sheetName = data.SheetNames[0];
+        const sheet = XLSX.utils.sheet_to_json(data.Sheets[sheetName]);
+        let labels = sheet.map(r => r.Date || r.date);
+        let confirmed = sheet.map(r => r.Confirmed || 0);
+        let recovered = sheet.map(r => r.Recovered || 0);
+        let deaths = sheet.map(r => r.Deaths || 0);
         createCharts(labels, confirmed, recovered, deaths);
     };
-    reader.readAsArrayBuffer(file);
+    reader.readAsBinaryString(file);
+});
+
+function resetZoom() {
+    Object.values(charts).forEach(c => c.resetZoom());
 }
 </script>
 
